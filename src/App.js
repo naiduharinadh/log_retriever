@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-const API_URL = 'http://13.218.54.57:3001';
+const API_URL = 'https://hsts.harinadh.click';
 
 function App() {
   const [logs, setLogs] = useState([]);

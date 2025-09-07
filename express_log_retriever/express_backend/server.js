@@ -1,8 +1,20 @@
 const express = require('express');
+const https = require('https');
+const http = require('http');
+const fs = require('fs');
 const { CloudWatchLogsClient, GetLogEventsCommand } = require('@aws-sdk/client-cloudwatch-logs');
 const cors = require('cors');
 
 const app = express();
+
+
+// /root/ssl-certificates
+
+// SSL configuration
+const sslOptions = {
+    key: fs.readFileSync('/root/ssl-certificates/private.key'),
+    cert: fs.readFileSync('/root/ssl-certificates/certificate.pem')
+};
 
 // Enhanced CORS configuration
 app.use(cors({
@@ -14,12 +26,11 @@ app.use(cors({
 // Initialize CloudWatch client
 const client = new CloudWatchLogsClient({
     region: 'us-east-1',
-    // The IAM role credentials will be automatically used
 });
 
-// Health check endpoint
+// Your existing routes
 app.get('/health', (req, res) => {
-    res.json({ 
+    res.json({
         status: 'healthy',
         timestamp: new Date().toISOString()
     });
@@ -28,7 +39,7 @@ app.get('/health', (req, res) => {
 // Logs endpoint
 app.get('/api/logs', async (req, res) => {
     console.log('Received request for logs at:', new Date().toISOString());
-    
+
     try {
         const params = {
             logGroupName: 'test',
@@ -56,7 +67,7 @@ app.get('/api/logs', async (req, res) => {
 
     } catch (error) {
         console.error('Error fetching logs:', error);
-        
+
         // Enhanced error response
         res.status(500).json({
             error: error.message,
@@ -80,13 +91,23 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Start server
-const PORT = process.env.PORT || 3001;
-const HOST = '172.31.88.240';  // Your EC2 private IP
+// Create HTTPS server
 
-app.listen(PORT, HOST, () => {
+const HOST = '172.31.88.240';
+
+const httpServer = http.createServer(app);
+const httpsServer = https.createServer(sslOptions, app);
+
+const HTTP_PORT = 3001;
+const HTTPS_PORT = 443;
+
+httpServer.listen(HTTP_PORT, HOST, () => {
+    console.log(`HTTP server running on http://${HOST}:${HTTP_PORT}`);
+});
+
+httpsServer.listen(HTTPS_PORT, HOST, () => {
     console.log(`Server started at ${new Date().toISOString()}`);
-    console.log(`Server running on http://${HOST}:${PORT}`);
+    console.log(`Secure server running on https://${HOST}:${HTTPS_PORT}`);
     console.log('Environment:', process.env.NODE_ENV || 'development');
 });
 
@@ -100,4 +121,3 @@ process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
     process.exit(1);
 });
-
