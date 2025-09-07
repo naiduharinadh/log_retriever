@@ -1,3 +1,27 @@
+Configure certificate on the amazonlinux using Openssl:
+```
+sudo yum update -y
+sudo yum install openssl -y
+
+mkdir ~/ssl-certificates
+cd ~/ssl-certificates
+
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout private.key -out certificate.pem
+
+sudo chmod 600 private.key
+sudo chmod 600 certificate.pem
+
+``` 
+## Update the FilePath in the server.js file of the Express ewb server configuration
+
+Configure the ALB rule to route the traffic to the application on the path "/api/logs/" .\
+
+
+
+
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
